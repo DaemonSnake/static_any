@@ -1,0 +1,3 @@
+- In visit: Save exceptions with nested_exception and get message with something like ```c++
+try {std::rethrow(ptr);} catch(std::exception const &e) { return std::string{e.what();}
+```
