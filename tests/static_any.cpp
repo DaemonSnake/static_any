@@ -5,6 +5,8 @@
 
 #include "static_any.hpp"
 
+using namespace StaticAny;
+
 template<class> struct printer;
 
 //EXAMPLE
@@ -39,7 +41,7 @@ template<class T> void __attribute__((noinline)) require_fn(T&&) {
 int main()
 {
     auto item = func(5);
-    auto lambda = [](auto i) {
+    auto lambda = [](auto i) noexcept {
         require_fn(i);
     };
     visit(item, lambda);

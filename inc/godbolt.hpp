@@ -1,3 +1,5 @@
+#pragma once
+
 # 1 "include/unconstexpr/unconstexpr.hpp"
 # 1 "<built-in>"
 # 1 "<command-line>"
