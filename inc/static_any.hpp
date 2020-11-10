@@ -5,8 +5,8 @@
 
 #include "common_ret.hpp"
 #include "globals.hpp"
-#include "godbolt.hpp"
 #include "type_list.hpp"
+#include "unconstexpr/unconstexpr.hpp"
 #include "visit.hpp"
 
 namespace StaticAny {
@@ -22,8 +22,8 @@ struct static_any {
 
   template <class T>
   constexpr static_any(T &&item) noexcept(
-      noexcept(all_types << ret_lambda<
-                   std::remove_pointer_t<decltype(*all_types)>, T>) ||
+      noexcept(all_types
+               << ret_lambda<std::remove_pointer_t<decltype(*all_types)>, T>) ||
       true)
       : index{std::remove_pointer_t<decltype(
             *all_types)>::template get_index<T>()},
