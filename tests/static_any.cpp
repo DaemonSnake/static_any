@@ -1,7 +1,8 @@
 #include <type_traits>
-#include <tuple>
-#include <memory>
-#include <optional>
+#include <typeinfo>
+#include <cstdio>
+#include <cxxabi.h>
+#include <string_view>
 
 #include "static_any.hpp"
 
@@ -23,10 +24,6 @@ constexpr static_any<> func(int i)
     }
 }
 
-#include <typeinfo>
-#include <cstdio>
-#include <cxxabi.h>
-
 template<class T> void __attribute__((noinline)) require_fn(T&&) {
     char buf[1024];
     int status = 0;
@@ -36,12 +33,10 @@ template<class T> void __attribute__((noinline)) require_fn(T&&) {
     std::printf("%s\n", buf);
 }
 
-#include <string_view>
-
 int main()
 {
     auto item = func(5);
-    auto lambda = [](auto i) noexcept {
+    auto lambda = [](auto i) {
         require_fn(i);
     };
     visit(item, lambda);

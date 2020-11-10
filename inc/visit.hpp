@@ -18,24 +18,12 @@ struct visit_info {
 
   template <size_t I>
   using get = typename type_list::template get<I>;
-
-  template <class Ptr>
-  static constexpr bool noexcept_value() {
-    using fn_ret = decltype(std::declval<Fn>()(*std::declval<Ptr>()));
-    bool invoke_noexcept =
-        noexcept(std::declval<Fn>()(*std::declval<Ptr>()));
-    if constexpr (is_bool)
-      return invoke_noexcept;
-    else
-      return noexcept(ret{std::declval<fn_ret>()}) && invoke_noexcept;
-  }
 };
 
 template <class Info, size_t N, class Self, class Fn,
           class type = typename Info::template get<N>,
           class ptr_t = Repr::any_ptr_t<Self, type>>
-constexpr auto visit_at(Self *self, Fn &&visitor) noexcept(
-    Info::template noexcept_value<ptr_t>()) {
+constexpr auto visit_at(Self *self, Fn &&visitor) {
   auto ptr = static_cast<ptr_t>(self->ptr);
   if constexpr (Info::is_bool)
     return (visitor(ptr->get()), true);
@@ -43,19 +31,9 @@ constexpr auto visit_at(Self *self, Fn &&visitor) noexcept(
     return typename Info::ret{visitor(ptr->get())};
 };
 
-template <class Info, class Self, class Fn>
-constexpr bool noexcept_clause() {
-  using self_ptr = std::add_pointer_t<Self>;
-  return []<size_t... Is>(std::index_sequence<Is...>) {
-    return (noexcept(visit_at<Info, Is>(std::declval<self_ptr>(),
-                                        std::declval<Fn>())) &&
-            ...);
-  }
-  (std::make_index_sequence<Info::type_list::length>());
-}
-
 template <class info, size_t I = 0, class Self, class Fn>
-constexpr decltype(auto) visit_helper(Self *self, Fn &&visitor) {
+constexpr decltype(auto) visit_helper(Self *self, Fn &&visitor)
+{
 #define _VISIT_CASE(N)                                           \
   case I + N: {                                                  \
     constexpr size_t n = I + N;                                  \
@@ -99,14 +77,7 @@ template <unconstexpr::id_value IdV = unconstexpr::unique_id([] {}), class Self,
 constexpr decltype(auto) visit(Self &&self, Fn &&visitor) noexcept {
   using info = visit_info<Self, Fn, IdV>;
   if (self.index == not_found) return typename info::ret{};
-  if constexpr (!noexcept_clause<info, Self, Fn>()) {
-    try {
-      return visit_helper<info>(&self, std::forward<Fn>(visitor));
-    } catch (...) {
-      return typename info::ret{};
-    }
-  } else
-    return visit_helper<info>(&self, std::forward<Fn>(visitor));
+  return visit_helper<info>(&self, std::forward<Fn>(visitor));
 }
 
 }  // namespace StaticAny::Visit

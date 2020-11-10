@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include "type_traits.hpp"
 
 namespace StaticAny::Return {
