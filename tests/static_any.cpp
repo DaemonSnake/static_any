@@ -1,41 +1,56 @@
 #include "static_any.hpp"
 
 #include <cxxabi.h>
-
-#include <cstdio>
 #include <iostream>
-#include <string_view>
 #include <typeinfo>
+#include <cassert>
 
 using StaticAny::static_any;
 using StaticAny::visit;
 
-constexpr static_any<> func(int i) {
-  switch (i) {
-    case 5:
+constexpr static_any<> func(char c) {
+  switch (c) {
+    case 'i':
       return 42;
-    case 32:
+    case 'f':
       return 3.14;
     default:
-      return "hello";
+      return "unknown";
   }
 }
 
 template <class T>
-void __attribute__((noinline)) require_fn(T&&) {
-  char buf[1024];
+std::string type_name(T&&) {
+  char buf[1024]{};
   int status = 0;
   size_t length = 1024;
   abi::__cxa_demangle(typeid(T).name(), buf, &length, &status);
-  buf[length] = '\0';
-  std::printf("%s\n", buf);
+  return std::string{buf};
 }
 
+template<class Expect>
+constexpr auto expect_type = [](auto i) {
+  assert(typeid(i) == typeid(Expect));
+  std::cout << '"' << i << "\" of type => ";
+};
+
 int main() {
-  auto item = func(5);
-  auto lambda = [](auto i) { require_fn(i); };
-  visit(item, lambda);
+  using namespace std::literals;
+
+  auto item = func('i');
+  auto same_lambda = [](auto i) -> std::string { return type_name(i); };
+  visit(item, expect_type<int>);
+  if (std::optional<std::string> res = visit(item, same_lambda); true) {
+    assert(res.has_value());
+    assert(*res == "int"sv);
+    std::cout << *res << std::endl;
+  }
   item = false;
-  visit(item, lambda);
+  visit(item, expect_type<bool>);
+  if (std::optional<std::string> res = visit(item, same_lambda); true) {
+    assert(res.has_value());
+    assert(*res == "bool"sv);
+    std::cout << *res << std::endl;
+  }
   return 0;
 }
