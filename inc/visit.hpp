@@ -24,7 +24,7 @@ template <class Info, size_t N, class Self, class Fn,
           class type = typename Info::template get<N>,
           class ptr_t = Repr::any_ptr_t<Self, type>>
 constexpr auto visit_at(Self *self, Fn &&visitor) {
-  auto ptr = static_cast<ptr_t>(self->ptr);
+  auto ptr = static_cast<ptr_t>(self->get_ptr());
   if constexpr (Info::is_bool)
     return (visitor(ptr->get()), true);
   else
@@ -34,6 +34,10 @@ constexpr auto visit_at(Self *self, Fn &&visitor) {
 template <class info, size_t I = 0, class Self, class Fn>
 constexpr decltype(auto) visit_helper(Self *self, Fn &&visitor)
 {
+#ifdef _VISIT_CASE
+# warning "_VISIT_CASE was already defined"
+# undef _VISIT_CASE
+#endif
 #define _VISIT_CASE(N)                                           \
   case I + N: {                                                  \
     constexpr size_t n = I + N;                                  \
@@ -43,7 +47,7 @@ constexpr decltype(auto) visit_helper(Self *self, Fn &&visitor)
       return visit_at<info, n>(self, std::forward<Fn>(visitor)); \
   }
 
-  switch (self->index) {
+  switch (self->get_index()) {
     _VISIT_CASE(0);
     _VISIT_CASE(1);
     _VISIT_CASE(2);
@@ -76,7 +80,7 @@ template <unconstexpr::id_value IdV = unconstexpr::unique_id([] {}), class Self,
           class Fn>
 constexpr decltype(auto) visit(Self &&self, Fn &&visitor) noexcept {
   using info = visit_info<Self, Fn, IdV>;
-  if (self.index == not_found) return typename info::ret{};
+  if (self.get_index() == not_found) return typename info::ret{};
   return visit_helper<info>(&self, std::forward<Fn>(visitor));
 }
 

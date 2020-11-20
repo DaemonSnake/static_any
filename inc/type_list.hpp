@@ -23,8 +23,8 @@ struct type_list {
   }
 
   template <class T>
-  static constexpr type_list<Args..., T> push_back() {
-    return {};
+  static constexpr type_list<Args..., T> *push_back() {
+    return nullptr;
   }
 
   template <class Fn, class Self>
