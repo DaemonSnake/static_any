@@ -40,7 +40,12 @@ struct result {
   constexpr result(result const&) = delete;
 
   template <class Fn>
-  bool catch_except(Fn&& visitor) {
+  auto catch_except(Fn&& visitor) {
+    return visit(error, std::forward<Fn>(visitor));
+  }
+
+  template <class Fn>
+  auto catch_except(Fn&& visitor) const {
     return visit(error, std::forward<Fn>(visitor));
   }
 
