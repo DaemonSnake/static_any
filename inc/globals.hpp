@@ -1,7 +1,10 @@
 #pragma once
 
+#include <cstddef>
+#include <type_traits>
+
 namespace StaticAny {
-static constexpr size_t not_found = -1ul;
+static constexpr std::size_t not_found = -1ul;
 
 template <class Old, class T>
 constexpr auto ret_lambda =

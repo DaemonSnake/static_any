@@ -4,28 +4,29 @@
 #include <utility>
 
 #include "type_traits.hpp"
+#include "globals.hpp"
 
 namespace StaticAny::IndexConvert {
 
 template <class T, class... Args>
-constexpr size_t find() {
-  size_t i = 0;
+constexpr std::size_t find() {
+  std::size_t i = 0;
   ((std::is_same_v<T, Args> || (++i, false)) || ...);
   return i >= sizeof...(Args) ? not_found : i;
 }
 
-template <size_t I = 0, size_t... FoundIdxs, template <class...> class H,
+template <std::size_t I = 0, std::size_t... FoundIdxs, template <class...> class H,
           class... SArgs, class... OArgs>
-constexpr size_t convert_index_impl(std::index_sequence<FoundIdxs...> idxs,
+constexpr std::size_t convert_index_impl(std::index_sequence<FoundIdxs...> idxs,
                                     H<SArgs...> const &n, H<OArgs...> const &o,
-                                    size_t index) {
+                                    std::size_t index) {
 #ifdef _VISIT_CASE
 #warning "_VISIT_CASE was already defined"
 #undef _VISIT_CASE
 #endif
 #define _VISIT_CASE(N)                       \
   case I + N: {                              \
-    constexpr size_t n = I + N;              \
+    constexpr std::size_t n = I + N;         \
     if constexpr (n >= sizeof...(OArgs))     \
       return not_found;                      \
     else                                     \

@@ -22,7 +22,7 @@ constexpr bool transfer_copy() {
 }
 
 template <class... SArgs, class... OArgs, class Other>
-constexpr size_t convert_index(TypeList::type_list<SArgs...> const *n_list,
+constexpr std::size_t convert_index(TypeList::type_list<SArgs...> const *n_list,
                                TypeList::type_list<OArgs...> const *o_list,
                                Other const &o) {
   constexpr auto find_idxs =
@@ -38,14 +38,14 @@ constexpr size_t convert_index(TypeList::type_list<SArgs...> const *n_list,
 namespace {
 template <unconstexpr::id_value Id = unconstexpr::unique_id([] {})>
 class static_any {
-  size_t index = not_found;
+  std::size_t index = not_found;
   Repr::any_base *ptr = {};
 
   template <unconstexpr::id_value>
   friend class static_any;
 
  public:
-  constexpr size_t get_index() const { return index; }
+  constexpr std::size_t get_index() const { return index; }
   constexpr const Repr::any_base *get_ptr() const { return ptr; }
   constexpr Repr::any_base *get_ptr() { return ptr; }
 

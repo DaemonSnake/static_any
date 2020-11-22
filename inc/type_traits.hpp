@@ -1,5 +1,8 @@
 #pragma once
 
+#include <type_traits>
+#include <tuple>
+
 namespace StaticAny::Traits {
 
 template <template <class> class Check, class For, template <class> class Adder,
@@ -14,7 +17,7 @@ template <template <class> class Check, class For, template <class> class Adder,
 using if_add_t = typename if_add<Check, For, Adder, On>::type;
 
 
-template <size_t I, auto... Is>
+template <std::size_t I, auto... Is>
 static constexpr auto get_n = std::tuple_element_t<
     I, std::tuple<std::integral_constant<decltype(Is), Is>...>>::value;
 

@@ -5,6 +5,7 @@
 
 #include "unconstexpr/unique_id.hpp"
 #include "data_repr.hpp"
+#include "globals.hpp"
 
 namespace StaticAny::Visit {
 
@@ -16,11 +17,11 @@ struct visit_info {
   using ret = typename type_list::template ret<Fn, Self>;
   static constexpr bool is_bool = std::is_same_v<bool, ret>;
 
-  template <size_t I>
+  template <std::size_t I>
   using get = typename type_list::template get<I>;
 };
 
-template <class Info, size_t N, class Self, class Fn,
+template <class Info, std::size_t N, class Self, class Fn,
           class type = typename Info::template get<N>,
           class ptr_t = Repr::any_ptr_t<Self, type>>
 constexpr auto visit_at(Self *self, Fn &&visitor) {
@@ -31,7 +32,7 @@ constexpr auto visit_at(Self *self, Fn &&visitor) {
     return typename Info::ret{visitor(ptr->get())};
 };
 
-template <class info, size_t I = 0, class Self, class Fn>
+template <class info, std::size_t I = 0, class Self, class Fn>
 constexpr decltype(auto) visit_helper(Self *self, Fn &&visitor)
 {
 #ifdef _VISIT_CASE
@@ -40,7 +41,7 @@ constexpr decltype(auto) visit_helper(Self *self, Fn &&visitor)
 #endif
 #define _VISIT_CASE(N)                                           \
   case I + N: {                                                  \
-    constexpr size_t n = I + N;                                  \
+    constexpr std::size_t n = I + N;                             \
     if constexpr (n >= info::type_list::length)                  \
       return typename info::ret{};                               \
     else                                                         \
@@ -66,7 +67,7 @@ constexpr decltype(auto) visit_helper(Self *self, Fn &&visitor)
     _VISIT_CASE(15);
 
     default: {
-      constexpr size_t n = 16 + I;
+      constexpr std::size_t n = 16 + I;
       if constexpr (n >= info::type_list::length)
         return typename info::ret{};
       else
