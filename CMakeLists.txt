@@ -15,6 +15,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED 20)
 
 add_library(static_any INTERFACE)
 target_include_directories(static_any INTERFACE inc/)
+target_link_libraries(static_any INTERFACE unconstexpr)
 
 INSTALL (
     DIRECTORY ${CMAKE_SOURCE_DIR}/inc/
