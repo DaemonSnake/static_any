@@ -64,8 +64,13 @@ class result {
   }
 
   constexpr operator bool() const { return !error; }
-  constexpr decltype(auto) operator*() const { return *res; }
-  constexpr decltype(auto) operator*() { return *res; }
+  constexpr decltype(auto) operator*() const & { return *res; }
+  constexpr decltype(auto) operator*() & { return *res; }
+  constexpr auto operator*() && { return *std::move(res); }
+
+  constexpr operator decltype(auto)() & { return this->operator*(); }
+  constexpr operator decltype(auto)() const & { return this->operator*(); }
+  constexpr operator auto() && { return this->operator*(); }
 };
 
 template <class T>
