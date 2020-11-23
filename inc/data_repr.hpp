@@ -8,8 +8,14 @@
 namespace StaticAny::Repr {
 
 struct any_base {
+  constexpr any_base() = default;
   constexpr virtual ~any_base() = default;
-  constexpr virtual any_base *clone() const = 0;
+  [[nodiscard]] constexpr virtual any_base *clone() const = 0;
+
+  constexpr any_base(any_base const &) = delete;
+  constexpr any_base(any_base &&) = delete;
+  constexpr any_base &operator=(any_base const &) = delete;
+  constexpr any_base &operator=(any_base &&) = delete;
 };
 
 template <class T>
@@ -18,10 +24,17 @@ class any_impl : public any_base {
 
  public:
   template <class Tcv>
-  constexpr any_impl(Tcv &&data) : data{std::forward<Tcv>(data)} {}
-  any_base *clone() const { return new any_impl{data}; }
+  explicit constexpr any_impl(Tcv &&data) : data{std::forward<Tcv>(data)} {}
+  [[nodiscard]] any_base *clone() const override { return new any_impl{data}; } //NOLINT(cppcoreguidelines-owning-memory)
   constexpr decltype(auto) get() const { return data; }
   constexpr decltype(auto) get() { return data; }
+  constexpr ~any_impl() override = default;
+
+  constexpr any_impl() = delete;
+  constexpr any_impl(any_impl const &) = delete;
+  constexpr any_impl(any_impl &&) = delete;
+  constexpr any_impl &operator=(any_impl const &) = delete;
+  constexpr any_impl &operator=(any_impl &&) = delete;
 };
 
 template <class T>

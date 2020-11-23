@@ -1,17 +1,18 @@
 #pragma once
 
 #include <optional>
+
 #include "type_traits.hpp"
 
 namespace StaticAny::Return {
 
 namespace details {
 
-using namespace StaticAny::Traits;
+using StaticAny::Traits::if_add_t;
 
 struct convertible {
   template <class T>
-  constexpr operator T() const noexcept;
+  constexpr explicit operator T() const noexcept;
 };
 
 template <class T>

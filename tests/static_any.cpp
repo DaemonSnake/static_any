@@ -29,7 +29,7 @@ std::string type_name(T&&) {
 }
 
 template<class Expect>
-constexpr auto expect_type = [](auto i) {
+constexpr auto expect_type = [](auto i) -> void {
   assert(typeid(i) == typeid(Expect));
   std::cout << '"' << i << "\" of type => ";
 };
@@ -40,14 +40,16 @@ int main() {
   auto item = func('i');
   auto same_lambda = [](auto i) -> std::string { return type_name(i); };
   visit(item, expect_type<int>);
-  if (std::optional<std::string> res = visit(item, same_lambda); true) {
+  {
+    std::optional<std::string> res = visit(item, same_lambda);
     assert(res.has_value());
     assert(*res == "int"sv);
     std::cout << *res << std::endl;
   }
   item = false;
   visit(item, expect_type<bool>);
-  if (std::optional<std::string> res = visit(item, same_lambda); true) {
+  {
+    std::optional<std::string> res = visit(item, same_lambda);
     assert(res.has_value());
     assert(*res == "bool"sv);
     std::cout << *res << std::endl;

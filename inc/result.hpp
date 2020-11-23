@@ -16,26 +16,35 @@ struct raise_item {
 };
 
 template <class T, unconstexpr::id_value Id = unconstexpr::unique_id([] {})>
-struct result {
+class result {
   using any = static_any<Id>;
 
   std::optional<T> res;
   any error{};
 
+  template <class Ot, unconstexpr::id_value Oid>
+  friend class result;
+
+ public:
+  template<class V>
+  using not_same_t = std::enable_if_t<!std::is_same_v<std::decay_t<V>, result>>;
+
   constexpr result() = default;
+  constexpr ~result() = default;
 
   template <class V>
   constexpr result(raise_item<V>&& obj) : error{std::move(obj.data)} {}
 
-  template <class V>
+  template <class V, class = not_same_t<V>>
   constexpr result(V&& item) : res{std::forward<V>(item)} {}
 
-  constexpr result(result&& other) = default;
+  constexpr result(result&& other) noexcept = default;
 
   template <unconstexpr::id_value OId>
-  constexpr result(result<T, OId>&& other)
+  constexpr explicit result(result<T, OId>&& other)
       : res{std::move(other.res)}, error{std::move(other.error)} {}
 
+  constexpr result& operator=(result&&) noexcept = default;
   constexpr result& operator=(result const&) = delete;
   constexpr result(result const&) = delete;
 

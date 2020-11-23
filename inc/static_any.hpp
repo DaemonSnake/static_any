@@ -15,14 +15,15 @@ namespace StaticAny {
 namespace Details {
 template <class Self, class Other>
 constexpr bool transfer_copy() {
-  return []<class... Args>(TypeList::type_list<Args...> const *) {
+  return
+      []<class... Args>(TypeList::type_list<Args...> const * /*current_list*/) {
     return (noexcept(Self{std::declval<Args>()}) && ...);
   }
   (*Other::all_types);
 }
 
 template <class... SArgs, class... OArgs, class Other>
-constexpr std::size_t convert_index(TypeList::type_list<SArgs...> const *n_list,
+constexpr size_t convert_index(TypeList::type_list<SArgs...> const *n_list,
                                TypeList::type_list<OArgs...> const *o_list,
                                Other const &o) {
   constexpr auto find_idxs =
@@ -33,40 +34,41 @@ constexpr std::size_t convert_index(TypeList::type_list<SArgs...> const *n_list,
 
 }  // namespace Details
 
-//static_any is declared in an anonymous namespace
-//the reason is to make sure that it is only used in the same translation unit
-namespace {
+// static_any is declared in an anonymous namespace on purpose
+// the reason is to make sure that any static_any<> is only used in the same translation unit
+namespace {  // NOLINT(cert-dcl59-cpp,google-build-namespaces)
 template <unconstexpr::id_value Id = unconstexpr::unique_id([] {})>
 class static_any {
-  std::size_t index = not_found;
+  size_t index = not_found;
   Repr::any_base *ptr = {};
 
   template <unconstexpr::id_value>
   friend class static_any;
 
  public:
-  constexpr std::size_t get_index() const { return index; }
-  constexpr const Repr::any_base *get_ptr() const { return ptr; }
-  constexpr Repr::any_base *get_ptr() { return ptr; }
+  [[nodiscard]] constexpr size_t get_index() const { return index; }
+  [[nodiscard]] constexpr const Repr::any_base *get_ptr() const { return ptr; }
+  [[nodiscard]] constexpr Repr::any_base *get_ptr() { return ptr; }
 
   static constexpr unconstexpr::meta_value<
       static_cast<TypeList::type_list<> *>(nullptr), 1, Id>
       all_types{};
 
-  template <class T>
-  constexpr static_any(T &&item) noexcept(
-      noexcept(all_types
-               << ret_lambda<std::remove_pointer_t<decltype(*all_types)>, T>) ||
-      true)
+  template<class T>
+  using not_same_t = std::enable_if_t<!std::is_same_v<std::decay_t<T>, static_any>>;
+
+  template <class T, class = not_same_t<T>>
+  constexpr static_any(T &&item) noexcept(noexcept(
+      all_types << ret_lambda<std::remove_pointer_t<decltype(*all_types)>, T>))
       : index{std::remove_pointer_t<decltype(
             *all_types)>::template get_index<T>()},
         ptr{new Repr::any_impl_t<T>{std::forward<T>(item)}} {}
 
-  //Copies types of other static_any into this one
+  // Copies types of other static_any into this one
   // steal its pointer and convert its index
   template <unconstexpr::id_value OId>
   constexpr static_any(static_any<OId> &&other) noexcept(
-      Details::transfer_copy<static_any, static_any<OId>>() || true)
+      Details::transfer_copy<static_any, static_any<OId>>())
       : index{Details::convert_index(*all_types, *static_any<OId>::all_types,
                                      other)},
         ptr{other.ptr} {
@@ -75,25 +77,25 @@ class static_any {
   }
 
   constexpr void release() {
-    if (ptr) {
+    if (ptr != nullptr) {
       delete ptr;
       ptr = nullptr;
     }
     index = not_found;
   }
 
-  constexpr operator bool() const { return index != not_found; }
+  constexpr explicit operator bool() const { return index != not_found; }
 
   constexpr static_any() = default;
   constexpr ~static_any() { release(); }
 
-  constexpr static_any(static_any &&other)
+  constexpr static_any(static_any &&other) noexcept
       : index{other.index}, ptr{other.ptr} {
     other.index = not_found;
     other.ptr = nullptr;
   }
 
-  constexpr static_any &operator=(static_any &&other) {
+  constexpr static_any &operator=(static_any &&other) noexcept {
     release();
     index = other.index;
     ptr = other.ptr;
@@ -105,10 +107,13 @@ class static_any {
   constexpr static_any(static_any const &other)
       : index{other.index}, ptr{other.ptr->clone()} {}
 
-  constexpr static_any &operator=(static_any const &other) {
-    release();
-    index = other.index;
-    ptr = other.ptr->clone();
+  constexpr static_any &operator=(static_any const &other) noexcept {
+    if (&other != this) {
+      release();
+      index = other.index;
+      ptr = other.ptr->clone();
+    }
+    return *this;
   }
 
   template <unconstexpr::id_value OId>
@@ -116,8 +121,8 @@ class static_any {
   template <unconstexpr::id_value OId>
   constexpr static_any &operator=(static_any<OId> const &other) = delete;
 };
-}
+}  // namespace
 
-using Visit::visit;
+using Visit::visit; //NOLINT(misc-unused-using-decls)
 
 }  // namespace StaticAny
