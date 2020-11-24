@@ -23,12 +23,13 @@ function download_unconstexpr() {
 function precompile_without_system_headers() {
     local header="$1"
     local deps="$2"
-    clang++ $deps -E -P -nostdinc -nostdinc++ $header 2>/dev/null;
+    clang++ $deps -E -P -nostdinc -nostdinc++ $header;
 }
 
 function gen_header() {
     local header="$1"
     local deps="$2"
+    echo "#pragma once";
     system_headers $1 $2
     precompile_without_system_headers $1 $2
 }
