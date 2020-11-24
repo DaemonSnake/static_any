@@ -1,9 +1,11 @@
 #include "result.hpp"
 
+#include <cxxabi.h>
+
 #include <cassert>
+#include <cstdio>
 #include <iostream>
 #include <typeindex>
-#include <cxxabi.h>
 
 using Result::raise;
 using Result::result;
@@ -12,6 +14,7 @@ enum err_codes : int {
   ERROR_STRING = 0,
   ERROR_DOUBLE = 1,
   ERROR_SIZE_T = 2,
+  NO_ERROR = 3,
 };
 
 constexpr int ok_res = 42;
@@ -22,6 +25,8 @@ result<int> simple_test(err_codes i) {
       return raise("hello world");
     case ERROR_DOUBLE:
       return raise(3.14);
+    default:
+      break;
   }
   return ok_res;
 }
@@ -33,8 +38,11 @@ result<int> return_other_result(err_codes j) {
 
 template <class Expect, class Result>
 void expect_error(Result&& res) {
-  auto on_error = [](auto i) { return std::type_index{typeid(i)}; };
-  auto opt_type = res.catch_except(on_error);
+  auto on_error = [](auto i) {
+    return std::type_index{typeid(i)};
+  };
+  assert(!res);
+  std::optional<std::type_index> opt_type = res.catch_except(on_error);
   assert(opt_type);
   assert(*opt_type == std::type_index{typeid(Expect)});
 
@@ -44,7 +52,19 @@ void expect_error(Result&& res) {
     size_t length = 1024;
     abi::__cxa_demangle(opt_type->name(), buf, &length, &status);
   }
-  std::cerr << "[err] " << buf << std::endl;
+  std::cerr << "[err] of type: " << buf << std::endl;
+}
+
+void pipeline_test() {
+  auto x = result{52} | 
+    [](int i) { return i-10; } |
+    [](int i) { return simple_test(NO_ERROR); } | //returns a result<int>
+    [](int i) { std::cout << "current value: " << i << std::endl; } | //get value but don't impact return
+    [](int i) { return "hello world"; };
+
+  if (x) {
+    std::cout << "final value: " << *x << std::endl;
+  }
 }
 
 int main(int ac, const char** av) {
@@ -65,5 +85,6 @@ int main(int ac, const char** av) {
       assert(*res == ok_res);
       std::cout << "[ok] " << *res << std::endl;
   }
+  pipeline_test();
   return 0;
 }
