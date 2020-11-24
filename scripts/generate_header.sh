@@ -14,7 +14,7 @@ function download_unconstexpr() {
     if [ ! -d unconstexpr-cpp20 ]; then
         mkdir -p build_header;
         cd build_header;
-        cmake ..;
+        cmake -DCMAKE_CXX_COMPILER_VERSION=10.0 ..; #force meet the requirements
         cd -;
         rm -fr build_header;
     fi;
