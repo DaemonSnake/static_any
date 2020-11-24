@@ -21,7 +21,6 @@
 #include <cwchar>
 #include <cstdio>
 #include <cerrno>
-#include <basic_string.tcc>
 namespace StaticAny::Traits {
 
 template <template <class> class Check, class For, template <class> class Adder,
