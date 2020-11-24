@@ -5,7 +5,6 @@
 #include <initializer_list>
 #include <tuple>
 #include <array>
-#include <concepts>
 #include <cstddef>
 namespace StaticAny::Traits {
 
@@ -25,7 +24,10 @@ static constexpr auto get_n = std::tuple_element_t<
     I, std::tuple<std::integral_constant<decltype(Is), Is>...>>::value;
 
 template<class Derived, class Base>
-concept not_derived = !std::derived_from<Derived, Base>;
+concept derived = std::is_base_of_v<Base, Derived>;
+
+template<class Derived, class Base>
+concept not_derived = !derived<Derived, Base>;
 
 }
 namespace StaticAny::Return {
