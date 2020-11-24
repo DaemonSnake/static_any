@@ -3,14 +3,14 @@
 ## Disclarer
 - readme is not finished
 - c++20 only library
-- requires at least **gcc 10.1** or **clang 10.0.0** (right now, if constexpr destructors are opted-out might lowered to **gcc 9.1** and **clang 9.0**)
+- requires at least **gcc 10.1** or **clang 10.0.0**
 - depends on my [unconstexpr](https://github.com/DaemonSnake/unconstexpr-cpp20) project
-- ! `static_any<>` is not the same type as `static_any<>` !
+- **! `static_any<>` is not the same type as `static_any<>`, same goes for `result<X>` !**
 - **!! don't prototype functions returning a `static_any<>` / seperating definition and declartion !!** think of any function with a `static_any<>` in his prototype as a `static inline` function
 
 
-## first... an example
-
+## first... example
+### static_any<>
 ```c++
 enum Type { INT, FLOAT, CHAR };
 
@@ -33,7 +33,50 @@ int main()
    visit(r, visitor); //will call decltype(visitor)::operator()<const char *>
 }
 ```
+### result<X>
+```c++
+result<int> simple_test(err_codes i) {
+  switch (i) {
+    case ERROR_STRING:
+      return raise("hello world");
+    case ERROR_DOUBLE:
+      return raise(3.14);
+  }
+  return ok_res;
+}
 
+result<int> use_result_simple(int) { /*...*/ }
+
+result<int> use_simple(err_codes i) {
+   return simple_test(i) | &use_result_simple;
+   //equivalent to:
+   // auto r = simple_test(i);
+   // if (!r) return r;
+   // return use_result_simple(r); //implicit cast to 'int', 'operator*' also available
+}
+
+int main() {
+  auto r = use_simple(ERROR_DOUBLE);
+  
+  if (r.catch_except([](auto except) { /*received an exception*/ }) {
+     //further error handling / cleanup
+     return 1;
+  }
+  int v = r;
+  //...
+
+  //result also defines a pipeline operator
+  auto r1 = result{52} |
+    [](int i) { return use_simple(ERROR_DOUBLE); } |
+    [](int j) -> const char * { return "hello world"; }; //will not be executed as the lhs is in error state
+  static_assert(std::is_same_v<decltype(*r1), const char *>);
+  bool found_error = r.catch_except([]<class T>(T value) {
+     assert(std::is_same_v<T, double>);
+  };
+  assert(found_error);
+  return 0;
+}
+```
 ## Wat!
 The library proposed here provides a type `static_any<const int *Id = MAGIC>` that can be understood as:
 - a visitable `std::any`
@@ -52,41 +95,4 @@ It also provides a type `result<class Expect, const int *Id = MAGIC>` that utili
 
 the implicit return on exception isn't possible on the library level,
 but it holds typed exceptions instead of relying on std::error_code.
-```c++
-result<int> simple_test(err_codes i) {
-  switch (i) {
-    case ERROR_STRING:
-      return raise("hello world");
-    case ERROR_DOUBLE:
-      return raise(3.14);
-  }
-  return ok_res;
-}
 
-result<int> use_result_simple(int) { /*...*/ }
-
-result<int> use_simple(err_codes i) {
-  auto r = simple_test(i);
-  if (!r) return r;
-  return use_result_simple(r); //implicit cast to 'int', 'operator*' also available
-}
-
-int main() {
-  auto r = use_simple(ERROR_DOUBLE);
-  if (r.catch_except([](auto except) { /*received an exception*/ }) {
-     //further error handling / cleanup
-     return 1;
-  }
-  int v = r;
-  //...
-
-  //result also defines a pipeline operator
-  auto r1 = result{52} |
-    [](int i) { return use_simple(ERROR_DOUBLE); } |
-    [](int j) -> const char * { return "hello world"; }; //will not be executed as the lhs is in error state
-  static_assert(std::is_same_v<decltype(*r1), const char *>);
-  return 0;
-}
-
-
-```
