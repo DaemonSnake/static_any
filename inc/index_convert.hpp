@@ -11,7 +11,7 @@ namespace StaticAny::IndexConvert {
 template <class T, class... Args>
 constexpr size_t find() {
   size_t i = 0;
-  ((std::is_same_v<T, Args> || (++i, false)) || ...);
+  static_cast<void>(((std::is_same_v<T, Args> || (++i, false)) || ...));
   return i >= sizeof...(Args) ? not_found : i;
 }
 

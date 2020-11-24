@@ -2,6 +2,7 @@
 
 #include <tuple>
 #include <type_traits>
+#include <concepts>
 
 namespace StaticAny::Traits {
 
@@ -19,5 +20,8 @@ using if_add_t = typename if_add<Check, For, Adder, On>::type;
 template <size_t I, auto... Is>
 static constexpr auto get_n = std::tuple_element_t<
     I, std::tuple<std::integral_constant<decltype(Is), Is>...>>::value;
+
+template<class Derived, class Base>
+concept not_derived = !std::derived_from<Derived, Base>;
 
 }  // namespace StaticAny::Traits
