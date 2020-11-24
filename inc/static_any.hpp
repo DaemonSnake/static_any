@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "type_traits.hpp"
 #include "common_ret.hpp"
 #include "globals.hpp"
 #include "index_convert.hpp"
@@ -32,13 +33,16 @@ constexpr size_t convert_index(TypeList::type_list<SArgs...> const *n_list,
                                           o.get_index());
 }
 
+struct static_any_base {};
+
 }  // namespace Details
+
 
 // static_any is declared in an anonymous namespace on purpose
 // the reason is to make sure that any static_any<> is only used in the same translation unit
 namespace {  // NOLINT(cert-dcl59-cpp,google-build-namespaces)
 template <unconstexpr::id_value Id = unconstexpr::unique_id([] {})>
-class static_any {
+class static_any : public Details::static_any_base {
   size_t index = not_found;
   Repr::any_base *ptr = {};
 
@@ -54,15 +58,13 @@ class static_any {
       static_cast<TypeList::type_list<> *>(nullptr), 1, Id>
       all_types{};
 
-  template<class T>
-  using not_same_t = std::enable_if_t<!std::is_same_v<std::decay_t<T>, static_any>>;
-
-  template <class T, class = not_same_t<T>>
+  template <Traits::not_derived<Details::static_any_base> T>
   constexpr static_any(T &&item) noexcept(noexcept(
       all_types << ret_lambda<std::remove_pointer_t<decltype(*all_types)>, T>))
       : index{std::remove_pointer_t<decltype(
             *all_types)>::template get_index<T>()},
-        ptr{new Repr::any_impl_t<T>{std::forward<T>(item)}} {}
+        ptr{new Repr::any_impl_t<T>{std::forward<T>(item)}} {
+        }
 
   // Copies types of other static_any into this one
   // steal its pointer and convert its index
@@ -84,7 +86,7 @@ class static_any {
     index = not_found;
   }
 
-  constexpr explicit operator bool() const { return index != not_found; }
+  constexpr operator bool() const { return index != not_found; }
 
   constexpr static_any() = default;
   constexpr ~static_any() { release(); }
@@ -105,7 +107,8 @@ class static_any {
   }
 
   constexpr static_any(static_any const &other)
-      : index{other.index}, ptr{other.ptr->clone()} {}
+      : index{other.index}, ptr{other.ptr->clone()} {
+      }
 
   constexpr static_any &operator=(static_any const &other) noexcept {
     if (&other != this) {
