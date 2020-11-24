@@ -23,7 +23,6 @@ jobs:
   header:
     runs-on: ubuntu-latest
     needs: [preprocess]
-    
     steps:
     - uses: actions/checkout@v1
       with:
