@@ -1,4 +1,12 @@
 #pragma once
+#include <optional>
+#include <type_traits>
+#include <utility>
+#include <initializer_list>
+#include <tuple>
+#include <array>
+#include <concepts>
+#include <cstddef>
 namespace StaticAny::Traits {
 
 template <template <class> class Check, class For, template <class> class Adder,
