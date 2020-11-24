@@ -16,6 +16,7 @@
 -- Configuring incomplete, errors occurred!
 See also "/home/runner/work/static_any/static_any/build_header/CMakeFiles/CMakeOutput.log".
 /home/runner/work/static_any/static_any
+#pragma once
 #include <optional>
 #include <type_traits>
 #include <utility>
