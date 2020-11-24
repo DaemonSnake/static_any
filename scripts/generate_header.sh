@@ -4,7 +4,7 @@ function system_headers() {
     local header="$1"
     local deps="$2"
     cpp -x c++ $deps $header 2>/dev/null | \
-        grep -E '^#.*[^.h]" 1 3' | \
+        grep -E '^#([^/]*/)*[^."]*" 1 3' | \
         awk -F '"' '{print $2}' | \
         awk -F '/' '{print $NF}' | \
         xargs -i echo "#include <{}>";
