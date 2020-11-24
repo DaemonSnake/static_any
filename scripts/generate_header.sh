@@ -1,5 +1,7 @@
 #!/bin/bash
 
+exclude_list="concepts" #pipe separated
+
 function system_headers() {
     local header="$1"
     local deps="$2"
@@ -7,6 +9,7 @@ function system_headers() {
         grep -E '^#([^/]*/)*[^."]*" 1 3' | \
         awk -F '"' '{print $2}' | \
         awk -F '/' '{print $NF}' | \
+        grep -vE "^($exclude_list)$" |\
         xargs -i echo "#include <{}>";
 }
 
