@@ -1,5 +1,10 @@
 #pragma once
 
+// Copyright (c) 2020 Bastien Penavayre
+//
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
 #include <tuple>
 #include <type_traits>
 #include <concepts>

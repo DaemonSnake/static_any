@@ -1,3 +1,8 @@
+// Copyright (c) 2020 Bastien Penavayre
+//
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
 #pragma once
 
 #include <cstddef>
