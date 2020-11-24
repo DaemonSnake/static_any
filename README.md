@@ -8,7 +8,6 @@
 - **! `static_any<>` is not the same type as `static_any<>`, same goes for `result<X>` !**
 - **!! don't prototype functions returning a `static_any<>` / seperating definition and declartion !!** think of any function with a `static_any<>` in his prototype as a `static inline` function
 
-
 ## first... examples
 ### static_any<>
 ```c++
@@ -36,7 +35,7 @@ int main()
    //otherwise std::optional<?>, where ? is the common return type of all possible calls to visitor's call operator
 }
 ```
-### result<X>
+### result\<X>
 ```c++
 result<int> some_fn(err_codes i) {
   switch (i) {
