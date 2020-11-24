@@ -9,16 +9,17 @@
 - **!! don't prototype functions returning a `static_any<>` / seperating definition and declartion !!** think of any function with a `static_any<>` in his prototype as a `static inline` function
 
 
-## first... example
+## first... examples
 ### static_any<>
 ```c++
-enum Type { INT, FLOAT, CHAR };
+enum Type { INT, FLOAT, CHAR, ... };
 
 static_any<> default_value(Type t) {
    switch(t) {
       case INT: return int{};
       case FLOAT: return float{};
       case CHAR: return char{};
+      ...
       default:
         return {};
    }
@@ -31,11 +32,13 @@ int main()
    visit(r, visitor); //will call decltype(visitor)::operator()<int>
    r = "hello world";
    visit(r, visitor); //will call decltype(visitor)::operator()<const char *>
+   //if the visitor returns void, the return type of visit will be bool
+   //otherwise std::optional<?>, where ? is the common return type of all possible calls to visitor's call operator
 }
 ```
 ### result<X>
 ```c++
-result<int> simple_test(err_codes i) {
+result<int> some_fn(err_codes i) {
   switch (i) {
     case ERROR_STRING:
       return raise("hello world");
@@ -45,35 +48,31 @@ result<int> simple_test(err_codes i) {
   return ok_res;
 }
 
-result<int> use_result_simple(int) { /*...*/ }
+void print_int(int) { /*...*/ }
+result<int> some_other_fn(int) { /*...*/ }
 
 result<int> use_simple(err_codes i) {
-   return simple_test(i) | &use_result_simple;
+   return some_fn(i) | &print_int | &some_other_fn;
    //equivalent to:
-   // auto r = simple_test(i);
+   // auto r = some_fn(i);
    // if (!r) return r;
-   // return use_result_simple(r); //implicit cast to 'int', 'operator*' also available
+   // print_int(*r);
+   // return some_other_fn(*r);
 }
 
 int main() {
   auto r = use_simple(ERROR_DOUBLE);
-  
-  if (r.catch_except([](auto except) { /*received an exception*/ }) {
+  auto except_visit = [](auto except) -> void { ... };
+  if (bool found_exception = r.catch_except(except_visit); found_exception) {
      //further error handling / cleanup
      return 1;
   }
-  int v = r;
-  //...
-
-  //result also defines a pipeline operator
-  auto r1 = result{52} |
-    [](int i) { return use_simple(ERROR_DOUBLE); } |
-    [](int j) -> const char * { return "hello world"; }; //will not be executed as the lhs is in error state
-  static_assert(std::is_same_v<decltype(*r1), const char *>);
-  bool found_error = r.catch_except([]<class T>(T value) {
-     assert(std::is_same_v<T, double>);
-  };
-  assert(found_error);
+  auto sizeof_visit = []<class T>(T const &) { return sizeof(T); }
+  std::optional<size_t> size_of_exception = r.catch_except(sizeof_visit);
+  if (size_of_exception) {
+    ...
+  }
+  ...
   return 0;
 }
 ```
@@ -91,8 +90,5 @@ said type will be added at the list of potential types to switch against when vi
 This list of types is an [unconstexpr expresion](https://github.com/DaemonSnake/unconstexpr-cpp20):
 a compile-time mutable expression.
 
-It also provides a type `result<class Expect, const int *Id = MAGIC>` that utilize `static_any` to implement parts of (Zero-overhead deterministic exceptions)[http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0709r2.pdf].
-
-the implicit return on exception isn't possible on the library level,
-but it holds typed exceptions instead of relying on std::error_code.
-
+It also provides a type `result<class Expect, const int *Id = MAGIC>` that utilize `static_any` to implement a staticly types and deterministic alternative to exceptions.
+Inspired by rust's `Result` and (Zero-overhead deterministic exceptions)[http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0709r2.pdf].
