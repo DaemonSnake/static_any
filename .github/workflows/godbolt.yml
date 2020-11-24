@@ -3,7 +3,7 @@ name: Godbolt C/C++ CI
 on:
   push:
     branches:
-      - master
+      - main
   schedule:
     # Every sunday
     - cron:  '0 0 * * 0'
