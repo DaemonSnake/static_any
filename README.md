@@ -2,7 +2,7 @@
 
 ## Disclarer
 - readme is not finished
-- c++20 only library
+- c++20 header-only library
 - requires at least **gcc 10.1** or **clang 10.0.0**
 - depends on my [unconstexpr](https://github.com/DaemonSnake/unconstexpr-cpp20) project
 - **! `static_any<>` is not the same type as `static_any<>`, same goes for `result<X>` !**
