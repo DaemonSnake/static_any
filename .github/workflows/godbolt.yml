@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: build preprocessed header
-      run: echo "#pragma once" && ./scripts/generate_header.sh >> result.hpp
+      run: (echo "#pragma once" && ./scripts/generate_header.sh) >> result.hpp
     - uses: actions/upload-artifact@v1
       with:
           name: output
