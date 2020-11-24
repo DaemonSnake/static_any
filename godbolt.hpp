@@ -1,26 +1,4 @@
 #pragma once
-#include <optional>
-#include <type_traits>
-#include <utility>
-#include <initializer_list>
-#include <tuple>
-#include <array>
-#include <stdexcept>
-#include <exception>
-#include <typeinfo>
-#include <new>
-#include <exception>
-#include <string>
-#include <cwchar>
-#include <cwchar>
-#include <cstdint>
-#include <clocale>
-#include <iosfwd>
-#include <cctype>
-#include <cstdlib>
-#include <cwchar>
-#include <cstdio>
-#include <cerrno>
 namespace StaticAny::Traits {
 
 template <template <class> class Check, class For, template <class> class Adder,
