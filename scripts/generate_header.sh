@@ -10,10 +10,20 @@ function system_headers() {
         xargs -i echo "#include <{}>";
 }
 
+function download_unconstexpr() {
+    if [ ! -d unconstexpr-cpp20 ]; then
+        mkdir -p build_header;
+        cd build_header;
+        cmake ..;
+        cd -;
+        rm -fr build_header;
+    fi;
+}
+
 function precompile_without_system_headers() {
     local header="$1"
     local deps="$2"
-    clang++ $deps -P -E -nostdinc -nostdinc++ $header 2>/dev/null;
+    clang++ $deps -E -P -nostdinc -nostdinc++ $header 2>/dev/null;
 }
 
 function gen_header() {
@@ -23,4 +33,5 @@ function gen_header() {
     precompile_without_system_headers $1 $2
 }
 
+download_unconstexpr;
 gen_header "inc/result.hpp" "-Iunconstexpr-cpp20/include/" | cat -s
