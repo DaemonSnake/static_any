@@ -62,12 +62,12 @@ result<int> use_simple(err_codes i) {
 int main() {
   auto r = use_simple(ERROR_DOUBLE);
   auto except_visit = [](auto except) -> void { ... };
-  if (bool found_exception = r.catch_except(except_visit); found_exception) {
+  if (bool found_exception = catch_except(r, except_visit); found_exception) {
      //further error handling / cleanup
      return 1;
   }
   auto sizeof_visit = []<class T>(T const &) { return sizeof(T); }
-  std::optional<size_t> size_of_exception = r.catch_except(sizeof_visit);
+  std::optional<size_t> size_of_exception = catch_except(r, sizeof_visit);
   if (size_of_exception) {
     ...
   }
