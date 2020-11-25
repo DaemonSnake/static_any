@@ -15,6 +15,12 @@
   ```
 - functions using `static_any` | `result` in their prototype will be automatically `static inline`, will fail to link/compile if only declared
 
+## Godbolt / Compiler explorer
+You can use `static_any` in compiler-explorer with the following:
+```c++
+#include "https://raw.githubusercontent.com/DaemonSnake/static_any/godbolt/godbolt.hpp"
+```
+
 ## first... examples
 ### static_any<>
 ```c++
