@@ -4,9 +4,16 @@
 - readme is not finished
 - c++20 header-only library
 - requires at least **gcc 10.1** or **clang 10.0.0**
-- depends on my [unconstexpr](https://github.com/DaemonSnake/unconstexpr-cpp20) project
-- **! `static_any<>` is not the same type as `static_any<>`, same goes for `result<X>` !**
-- **!! don't prototype functions returning a `static_any<>` / seperating definition and declartion !!** think of any function with a `static_any<>` in his prototype as a `static inline` function
+- depends on my [unconstexpr] project
+
+## Warnings
+- ```c++
+   static_assert(std::is_same_v<static_any<>, static_any<>>, "Will always fail!");
+  ```
+- ```c++
+   static_assert(std::is_same_v<resut<X>, result<X>>, "Will always fail too!");
+  ```
+- functions using `static_any` | `result` in their prototype will be automatically `static inline`, will fail to link/compile if only declared
 
 ## first... examples
 ### static_any<>
@@ -52,11 +59,12 @@ result<int> some_other_fn(int) { /*...*/ }
 
 result<int> use_simple(err_codes i) {
    return some_fn(i) | &print_int | &some_other_fn;
-   //equivalent to:
-   // auto r = some_fn(i);
-   // if (!r) return r;
-   // print_int(*r);
-   // return some_other_fn(*r);
+   /* equivalent to:
+         auto r = some_fn(i);
+         if (!r) return r;
+         print_int(*r);
+         return some_other_fn(*r);
+   */
 }
 
 int main() {
@@ -77,17 +85,21 @@ int main() {
 ```
 ## Wat!
 The library proposed here provides a type `static_any<const int *Id = MAGIC>` that can be understood as:
-- a visitable `std::any`
-- a deduced/automatic `std::variant`
+- a visitable [std::any]
+- a deduced/automatic [std::variant]
 
-Basically instead of having to provide to `std::variant` the list of potential types desired,
+Basically instead of having to provide to [std::variant] the list of potential types desired,
 `static_any<>` will deduce it by itself as the current translation unit is being compiled.
 
 Each time its constructor `template<class T> static_any(T&&)` is instantiated with a new type,
 said type will be added at the list of potential types to switch against when visiting the object.
 
-This list of types is an [unconstexpr expresion](https://github.com/DaemonSnake/unconstexpr-cpp20):
-a compile-time mutable expression.
+This list of types is an [unconstexpr expresion](https://github.com/DaemonSnake/unconstexpr-cpp20), a compile-time mutable expression.
 
-It also provides a type `result<class Expect, const int *Id = MAGIC>` that utilize `static_any` to implement a staticly types and deterministic alternative to exceptions.
-Inspired by rust's `Result` and (Zero-overhead deterministic exceptions)[http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0709r2.pdf].
+It also provides a type `result<class Expect, const int *Id = MAGIC>` that utilize `static_any` to implement a staticly typed and deterministic alternative to exceptions.
+Inspired by rust's `Result` and [Zero-overhead deterministic exceptions].
+
+[unconstexpr]: https://github.com/DaemonSnake/unconstexpr-cpp20
+[std::variant]: https://en.cppreference.com/w/cpp/utility/variant
+[std::any]: https://en.cppreference.com/w/cpp/utility/any
+[Zero-overhead deterministic exceptions]: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0709r2.pdf
