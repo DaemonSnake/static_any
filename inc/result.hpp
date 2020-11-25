@@ -16,6 +16,7 @@ namespace Result {
 using StaticAny::static_any;
 using StaticAny::visit;
 using StaticAny::Traits::not_derived;
+using StaticAny::Traits::derived;
 
 struct raise_item_base {};
 
@@ -52,7 +53,7 @@ class result : public result_base {
       V&& item)
       : res{std::forward<V>(item)} {}
 
-  template <std::same_as<any> AnyCv>
+  template <derived<any> AnyCv>
   constexpr result(AnyCv&& error) : error{std::forward<AnyCv>(error)} {}
 
   constexpr result(result&& other) noexcept = default;
@@ -89,11 +90,11 @@ class result : public result_base {
   constexpr operator decltype(auto)() const& { return this->operator*(); }
   constexpr operator auto() && { return this->operator*(); }
 
-  template <std::derived_from<result_base> Res, class Fn>
+  template <derived<result_base> Res, class Fn>
   friend decltype(auto) operator|(Res&& r, Fn&& fn);
 };
 
-template<std::derived_from<result_base> T>
+template<derived<result_base> T>
 result(T&&) -> result<typename std::decay_t<T>::type, std::decay_t<T>::id>;
 
 template<class T, unconstexpr::id_value Id = unconstexpr::unique_id([] {})>
@@ -104,7 +105,7 @@ constexpr auto raise(T&& item) -> raise_item<std::decay_t<T>> {
   return {{}, std::forward<T>(item)};
 }
 
-template <std::derived_from<result_base> Res, class Fn>
+template <derived<result_base> Res, class Fn>
 decltype(auto) operator|(Res&& r, Fn&& fn)
 {
   using ret = std::result_of_t<Fn(decltype(*r))>;
