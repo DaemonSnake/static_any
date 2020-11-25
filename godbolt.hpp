@@ -24,7 +24,7 @@ static constexpr auto get_n = std::tuple_element_t<
     I, std::tuple<std::integral_constant<decltype(Is), Is>...>>::value;
 
 template<class Derived, class Base>
-concept derived = std::is_base_of_v<Base, Derived>;
+concept derived = std::is_base_of_v<Base, std::decay_t<Derived>>;
 
 template<class Derived, class Base>
 concept not_derived = !derived<Derived, Base>;
@@ -579,14 +579,11 @@ namespace Result {
 
 using StaticAny::static_any;
 using StaticAny::visit;
-using StaticAny::Traits::not_derived;
 using StaticAny::Traits::derived;
-
-struct raise_item_base {};
+using StaticAny::Traits::not_derived;
 
 template <class T>
-struct raise_item : raise_item_base {
-  using raise_item_t = void;
+struct raise_item {
   T data;
 };
 
@@ -610,15 +607,19 @@ class result : public result_base {
   constexpr ~result() = default;
 
   template <class V>
-  constexpr result(raise_item<V>&& obj) : error{std::move(obj.data)} {}
+  constexpr result(raise_item<V>&& obj) noexcept(noexcept(any{
+      std::move(obj.data)}))
+      : error{std::move(obj.data)} {}
 
-  template <StaticAny::Traits::not_derived<result_base> V>
+  template <not_derived<result_base> V>
   requires(std::is_constructible_v<std::optional<T>, V>) constexpr result(
       V&& item)
       : res{std::forward<V>(item)} {}
 
   template <derived<any> AnyCv>
-  constexpr result(AnyCv&& error) : error{std::forward<AnyCv>(error)} {}
+  constexpr result(AnyCv&& error) noexcept(noexcept(any{
+      std::forward<AnyCv>(error)}))
+      : error{std::forward<AnyCv>(error)} {}
 
   constexpr result(result&& other) noexcept = default;
 
@@ -627,18 +628,9 @@ class result : public result_base {
       : res{std::move(other.res)}, error{std::move(other.error)} {}
 
   constexpr result& operator=(result&&) noexcept = default;
+
   constexpr result& operator=(result const&) = delete;
   constexpr result(result const&) = delete;
-
-  template <class Fn>
-  auto catch_except(Fn&& visitor) {
-    return visit(error, std::forward<Fn>(visitor));
-  }
-
-  template <class Fn>
-  auto catch_except(Fn&& visitor) const {
-    return visit(error, std::forward<Fn>(visitor));
-  }
 
   template <class Self>
   static constexpr decltype(auto) get(Self& self) {
@@ -654,24 +646,32 @@ class result : public result_base {
   constexpr operator decltype(auto)() const& { return this->operator*(); }
   constexpr operator auto() && { return this->operator*(); }
 
-  template <derived<result_base> Res, class Fn>
-  friend decltype(auto) operator|(Res&& r, Fn&& fn);
+  template <derived<result_base> Result, class Fn>
+  friend decltype(auto) operator|(Result&& r, Fn&& fn);
+
+  template <derived<result_base> Result, class Fn>
+  friend auto catch_except(Result&&, Fn&&);
 };
 
-template<derived<result_base> T>
-result(T&&) -> result<typename std::decay_t<T>::type, std::decay_t<T>::id>;
+template <derived<result_base> Result, class Fn>
+auto catch_except(Result&& item, Fn&& visitor) {
+  return StaticAny::visit(std::forward<Result>(item).error,
+                          std::forward<Fn>(visitor));
+}
 
-template<class T, unconstexpr::id_value Id = unconstexpr::unique_id([] {})>
-result(T&&) -> result<T, Id>;
+template <derived<result_base> T>
+result(T &&) -> result<typename std::decay_t<T>::type, std::decay_t<T>::id>;
+
+template <class T, unconstexpr::id_value Id = unconstexpr::unique_id([] {})>
+result(T &&) -> result<T, Id>;
 
 template <class T>
 constexpr auto raise(T&& item) -> raise_item<std::decay_t<T>> {
-  return {{}, std::forward<T>(item)};
+  return {std::forward<T>(item)};
 }
 
 template <derived<result_base> Res, class Fn>
-decltype(auto) operator|(Res&& r, Fn&& fn)
-{
+decltype(auto) operator|(Res&& r, Fn&& fn) {
   using ret = std::result_of_t<Fn(decltype(*r))>;
 
   if constexpr (std::is_void_v<ret>) {
