@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cstdio>
 #include <iostream>
+#include <string>
 #include <typeindex>
 
 using Result::raise;
@@ -38,29 +39,32 @@ result<int> return_other_result(err_codes j) {
 
 template <class Expect, class Result>
 void expect_error(Result&& res) {
-  auto on_error = [](auto i) {
-    return std::type_index{typeid(i)};
-  };
-  assert(!res);
-  std::optional<std::type_index> opt_type = res.catch_except(on_error);
-  assert(opt_type);
-  assert(*opt_type == std::type_index{typeid(Expect)});
-
-  char buf[1024]{};
-  {
+  const auto type_repr = [](std::type_info const& t) -> std::string {
+    char buf[1024]{};
     int status = 0;
     size_t length = 1024;
-    abi::__cxa_demangle(opt_type->name(), buf, &length, &status);
-  }
-  std::cerr << "[err] of type: " << buf << std::endl;
+    abi::__cxa_demangle(t.name(), buf, &length, &status);
+    return {buf};
+  };
+
+  auto on_error = [&type_repr](auto i) -> std::string {
+    return type_repr(typeid(i));
+  };
+  assert(!res);
+  std::optional<std::string> opt_type = catch_except(res, on_error);
+  assert(opt_type);
+  assert(*opt_type == type_repr(typeid(Expect)));
+  std::cerr << "[err] of type: " << *opt_type << std::endl;
 }
 
 void pipeline_test() {
-  auto x = result{52} | 
-    [](int i) { return i-10; } |
-    [](int i) { return simple_test(NO_ERROR); } | //returns a result<int>
-    [](int i) { std::cout << "current value: " << i << std::endl; } | //get value but don't impact return
-    [](int i) { return "hello world"; };
+  auto x =
+      result{52} | [](int i) { return i - 10; } |
+      [](int i) { return simple_test(NO_ERROR); } |  // returns a result<int>
+      [](int i) {
+        std::cout << "current value: " << i << std::endl;
+      } |  // get value but don't impact return
+      [](int i) { return "hello world"; };
 
   if (x) {
     std::cout << "final value: " << *x << std::endl;
@@ -81,9 +85,10 @@ int main(int ac, const char** av) {
     case ERROR_SIZE_T:
       expect_error<size_t>(res);
       break;
-    default:
+    case NO_ERROR:
       assert(*res == ok_res);
       std::cout << "[ok] " << *res << std::endl;
+      break;
   }
   pipeline_test();
   return 0;
