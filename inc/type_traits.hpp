@@ -26,7 +26,7 @@ static constexpr auto get_n = std::tuple_element_t<
     I, std::tuple<std::integral_constant<decltype(Is), Is>...>>::value;
 
 template<class Derived, class Base>
-concept derived = std::is_base_of_v<Base, Derived>;
+concept derived = std::is_base_of_v<Base, std::decay_t<Derived>>;
 
 template<class Derived, class Base>
 concept not_derived = !derived<Derived, Base>;
