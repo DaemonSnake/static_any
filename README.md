@@ -13,7 +13,7 @@
    static_assert(std::is_same_v<resut<X>, result<X>>, "Will always fail too!");
   ```
 - functions using `static_any` | `result` in their prototype will be automatically `static inline`, will fail to link/compile if only declared
-
+- this objects shouldn't be shared accross translation units. it shouldn't be possible because of the static inline nature of these types anyway.
 ## Godbolt / Compiler explorer
 You can use `static_any` in compiler-explorer with the following:
 ```c++
