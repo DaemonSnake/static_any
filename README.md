@@ -23,7 +23,7 @@ You can use `static_any` in compiler-explorer with the following:
 ## first... examples
 ### static_any<>
 ```c++
-//godbolt link: https://godbolt.org/
+//godbolt link: https://godbolt.org/z/WE47Kc
 enum Type { INT, FLOAT, CHAR, ... };
 
 static_any<> default_value(Type t) {
