@@ -1,10 +1,9 @@
 # static_any: std::visit(std::any)
 
 ## Disclarer
-- readme is not finished
-- c++20 header-only library
-- requires at least **gcc 10.1** or **clang 10.0.0**
-- depends on my [unconstexpr] project
+- c++20 experimental header-only library
+- requires at least **gcc 10.1** or **clang 10.0.0** (virtual destructor, concepts, etc...)
+- depends on my [unconstexpr] project, therefore its warnings apply here.
 
 ## Warnings
 - ```c++
