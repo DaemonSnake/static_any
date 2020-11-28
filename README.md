@@ -23,6 +23,7 @@ You can use `static_any` in compiler-explorer with the following:
 ## first... examples
 ### static_any<>
 ```c++
+//godbolt link: https://godbolt.org/
 enum Type { INT, FLOAT, CHAR, ... };
 
 static_any<> default_value(Type t) {
@@ -49,6 +50,7 @@ int main()
 ```
 ### result\<X>
 ```c++
+//godbolt link: https://godbolt.org/z/KGd3de
 result<int> some_fn(err_codes i) {
   switch (i) {
     case ERROR_STRING:
