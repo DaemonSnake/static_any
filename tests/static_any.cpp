@@ -39,6 +39,9 @@ int main() {
 
   auto item = func('i');
   auto same_lambda = [](auto i) -> std::string { return type_name(i); };
+
+  std::cout << "by stream: " << item << std::endl;
+
   visit(item, expect_type<int>);
   {
     std::optional<std::string> res = visit(item, same_lambda);

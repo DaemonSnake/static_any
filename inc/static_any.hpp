@@ -134,3 +134,11 @@ class static_any : public Details::static_any_base {
 using Visit::visit; //NOLINT(misc-unused-using-decls)
 
 }  // namespace StaticAny
+
+template<class Stream, StaticAny::Traits::derived<StaticAny::Details::static_any_base> Any, unconstexpr::id_value Id = unconstexpr::unique_id([]{})>
+Stream &operator<<(Stream &stream, Any &&any) {
+  StaticAny::Visit::visit<Id>(std::forward<Any>(any), [&stream]<class T>(T&& item) {
+      stream << std::forward<T>(item);
+  });
+  return stream;
+}
