@@ -531,7 +531,7 @@ class static_any : public Details::static_any_base {
     index = not_found;
   }
 
-  constexpr operator bool() const { return index != not_found; }
+  constexpr explicit operator bool() const { return index != not_found; }
 
   constexpr static_any() = default;
   constexpr ~static_any() { release(); }
@@ -637,7 +637,7 @@ class result : public result_base {
     return *self.data;
   }
 
-  constexpr operator bool() const { return !error; }
+  constexpr explicit operator bool() const { return !error; }
   constexpr decltype(auto) operator*() const& { return *res; }
   constexpr decltype(auto) operator*() & { return *res; }
   constexpr auto operator*() && { return *std::move(res); }
