@@ -73,7 +73,7 @@ class result : public result_base {
     return *self.data;
   }
 
-  constexpr operator bool() const { return !error; }
+  constexpr explicit operator bool() const { return !error; }
   constexpr decltype(auto) operator*() const& { return *res; }
   constexpr decltype(auto) operator*() & { return *res; }
   constexpr auto operator*() && { return *std::move(res); }

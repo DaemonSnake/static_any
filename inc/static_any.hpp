@@ -91,7 +91,7 @@ class static_any : public Details::static_any_base {
     index = not_found;
   }
 
-  constexpr operator bool() const { return index != not_found; }
+  constexpr explicit operator bool() const { return index != not_found; }
 
   constexpr static_any() = default;
   constexpr ~static_any() { release(); }
