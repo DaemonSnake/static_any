@@ -34,6 +34,23 @@ constexpr auto expect_type = [](auto i) -> void {
   std::cout << '"' << i << "\" of type => ";
 };
 
+void cross_assign() {
+  static_any<> first {0};
+  first = 3.14;
+  static_any<> second {"hello world"};
+  first = std::move(second);
+  {
+    auto r = visit(first, [](auto i) { assert(typeid(i) == typeid(const char *)); });
+    assert(r);
+  }
+  second = 'c';
+  first = std::move(second);
+  {
+    auto r = visit(first, [](auto i) { assert(typeid(i) == typeid(char)); });
+    assert(r);
+  }
+}
+
 int main() {
   using namespace std::literals;
 
@@ -57,5 +74,7 @@ int main() {
     assert(*res == "bool"sv);
     std::cout << *res << std::endl;
   }
+
+  cross_assign();
   return 0;
 }
