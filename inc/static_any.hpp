@@ -124,6 +124,16 @@ class static_any : public Details::static_any_base {
     return *this;
   }
 
+  template<unconstexpr::id_value OId>
+  constexpr static_any &operator=(static_any<OId> &&other)
+    noexcept(Details::transfer_copy<static_any, static_any<OId>>())
+  {
+    index = Details::convert_index(*all_types, *static_any<OId>::all_types, other);
+    ptr = other.ptr;
+    other.ptr = nullptr;
+    other.index = not_found;
+  }
+
   template <unconstexpr::id_value OId>
   constexpr static_any(static_any<OId> const &other) = delete;
   template <unconstexpr::id_value OId>
